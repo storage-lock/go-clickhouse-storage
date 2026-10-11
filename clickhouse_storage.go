@@ -56,9 +56,13 @@ func (x *ClickHouseStorage) GetName() string {
 
 func (x *ClickHouseStorage) Capabilities() []storage.StorageCapability {
 	return []storage.StorageCapability{
-		storage.CapabilityCAS,
 		storage.CapabilityReliableTime,
+		storage.CapabilityWatch,
 	}
+}
+
+func (x *ClickHouseStorage) Watch(ctx context.Context, lockId string) (<-chan *storage.LockInformation, error) {
+	return storage.NewPollingLockWatcher(x, 500*time.Millisecond).Watch(ctx, lockId)
 }
 
 func (x *ClickHouseStorage) Init(ctx context.Context) error {
@@ -93,36 +97,19 @@ func (p *LocalTimeProvider) GetTime(ctx context.Context) (time.Time, error) {
 	return time.Now(), nil
 }
 
-// CreateWithVersion ClickHouse 使用 INSERT
+// CreateWithVersion ClickHouse 不支持原子条件写入，无法保证分布式锁所需的互斥性
 func (x *ClickHouseStorage) CreateWithVersion(ctx context.Context, lockId string, version storage.Version, lockInformation *storage.LockInformation) error {
-	query := fmt.Sprintf(`INSERT INTO %s (lock_id, version, json_data, created_at) VALUES (?, ?, ?, now())`, x.options.TableName)
-	err := x.conn.Exec(ctx, query, lockId, uint64(version), lockInformation.ToJsonString())
-	if err != nil {
-		return err
-	}
-	return nil
+	return storage_lock.ErrStorageCapabilityMissing
 }
 
-// UpdateWithVersion 使用 INSERT 覆盖
+// UpdateWithVersion ClickHouse 不支持原子条件更新，无法保证版本一致性
 func (x *ClickHouseStorage) UpdateWithVersion(ctx context.Context, lockId string, expectedVersion, newVersion storage.Version, lockInformation *storage.LockInformation) error {
-	// 检查当前版本
-	var currentVersion uint64
-	query := fmt.Sprintf(`SELECT version FROM %s FINAL WHERE lock_id = ?`, x.options.TableName)
-	if err := x.conn.QueryRow(ctx, query, lockId).Scan(&currentVersion); err != nil {
-		return storage_lock.ErrLockNotFound
-	}
-	if currentVersion != uint64(expectedVersion) {
-		return storage_lock.ErrVersionMiss
-	}
-
-	// 插入新版本
-	query = fmt.Sprintf(`INSERT INTO %s (lock_id, version, json_data, created_at) VALUES (?, ?, ?, now())`, x.options.TableName)
-	return x.conn.Exec(ctx, query, lockId, uint64(newVersion), lockInformation.ToJsonString())
+	return storage_lock.ErrStorageCapabilityMissing
 }
 
-// DeleteWithVersion ClickHouse 不支持高效删除，使用墓碑
+// DeleteWithVersion ClickHouse 不支持原子条件删除，无法保证分布式锁的互斥性
 func (x *ClickHouseStorage) DeleteWithVersion(ctx context.Context, lockId string, expectedVersion storage.Version, lockInformation *storage.LockInformation) error {
-	return storage_lock.ErrVersionMiss
+	return storage_lock.ErrStorageCapabilityMissing
 }
 
 func (x *ClickHouseStorage) Get(ctx context.Context, lockId string) (string, error) {

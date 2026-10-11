@@ -23,6 +23,9 @@ type ClickHouseConnectionManager struct {
 
 var _ storage.ConnectionManager[clickhouse.Conn] = &ClickHouseConnectionManager{}
 
+// clickHouseOpen 默认打开真实连接，测试可替换。
+var clickHouseOpen = clickhouse.Open
+
 func NewClickHouseConnectionManagerFromConfig(addr, database, username, password string) *ClickHouseConnectionManager {
 	return &ClickHouseConnectionManager{
 		Addr:     addr,
@@ -34,9 +37,9 @@ func NewClickHouseConnectionManagerFromConfig(addr, database, username, password
 
 func NewClickHouseConnectionManagerFromConn(conn clickhouse.Conn) *ClickHouseConnectionManager {
 	return &ClickHouseConnectionManager{
-		presetConn: conn,
+		presetConn:  conn,
 		initialized: true,
-		conn:       conn,
+		conn:        conn,
 	}
 }
 
@@ -52,7 +55,7 @@ func (x *ClickHouseConnectionManager) Take(ctx context.Context) (clickhouse.Conn
 		return x.conn, nil
 	}
 
-	conn, err := clickhouse.Open(&clickhouse.Options{
+	conn, err := clickHouseOpen(&clickhouse.Options{
 		Addr: []string{x.Addr},
 		Auth: clickhouse.Auth{
 			Database: x.Database,
