@@ -18,6 +18,8 @@ package clickhouse_storage
 
 import (
 	"context"
+	"database/sql"
+	"errors"
 	"fmt"
 	"time"
 
@@ -116,7 +118,12 @@ func (x *ClickHouseStorage) Get(ctx context.Context, lockId string) (string, err
 	var jsonData string
 	query := fmt.Sprintf(`SELECT json_data FROM %s FINAL WHERE lock_id = ?`, x.options.TableName)
 	if err := x.conn.QueryRow(ctx, query, lockId).Scan(&jsonData); err != nil {
-		return "", storage_lock.ErrLockNotFound
+		// 只有确实没有这一行才是锁不存在。把连接失败、语法错误也报成
+		// ErrLockNotFound 会让调用方误判成"可以新建"，掩盖真实故障。
+		if errors.Is(err, sql.ErrNoRows) {
+			return "", storage_lock.ErrLockNotFound
+		}
+		return "", err
 	}
 	return jsonData, nil
 }
