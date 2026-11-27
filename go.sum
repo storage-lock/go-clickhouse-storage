@@ -70,6 +70,8 @@ github.com/storage-lock/go-storage-lock v0.1.0 h1:JcoNqDNqLnfi6GqHdKfjfmEKHALBaR
 github.com/storage-lock/go-storage-lock v0.1.0/go.mod h1:J/s8NP4XIeQmAan91IJWP0R0/3SiZzxLrhctwo2cUDc=
 github.com/storage-lock/go-storage-test-helper v0.0.3 h1:y8B24zJkQaI7uYOW2MTBIHTZXbRpkEG6rS1XMWAttjs=
 github.com/storage-lock/go-storage-test-helper v0.0.3/go.mod h1:Zn6YIq0r0pmK+naGUhRhb7TqTEFDjoU+25yIugt9iAw=
+github.com/storage-lock/go-storage-test-helper v0.0.5 h1:LTFISNvUdOADz8GiVePJRlLBH9YCac50dTgEAddOh/c=
+github.com/storage-lock/go-storage-test-helper v0.0.5/go.mod h1:YAJ2CguR5D49NNyo5q1mQO5gySnqQeDRpSK6fPHxZWk=
 github.com/storage-lock/go-utils v0.0.2 h1:pdacTOlD+AHqwWVmDqZLcjKF+7p8TjsmlvZ9bmmkIfE=
 github.com/storage-lock/go-utils v0.0.2/go.mod h1:tx8ATHL7yOC0Nyjpba7hJNk0+QNt2XEnMr8NcGm9Gak=
 github.com/stretchr/objx v0.1.0/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+wExME=
